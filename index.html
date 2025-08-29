@@ -5,15 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mercymie Naturals — Simple Shop</title>
 
-  <!--
-    HOW TO EDIT:
-    - Only change the DATA block (search for "EASY DATA TO EDIT").
-    - Keep product "id" short, lowercase, no spaces.
-    - Images live in the repo root for this version.
-  -->
-
   <style>
-    /* ========== colors & base layout ========== */
     :root{ --bg:#0f0f11; --panel:#171a20; --text:#e8eaed; --muted:#97a0aa; --brand:#9af0bf; }
     *{ box-sizing:border-box }
     html,body{ margin:0; background:var(--bg); color:var(--text); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial }
@@ -22,7 +14,6 @@
     .muted{ color:var(--muted) }
     .container{ max-width:1000px; margin:0 auto; padding:24px }
 
-    /* ========== top nav ========== */
     .nav{ position:sticky; top:0; background:#111319cc; border-bottom:1px solid #23262e; backdrop-filter:blur(6px) }
     .nav-inner{ display:flex; align-items:center; justify-content:space-between; padding:12px 24px }
     .brand{ display:flex; gap:10px; align-items:center; font-weight:800 }
@@ -31,28 +22,24 @@
     .cart-link{ cursor:pointer }
     .badge{ display:inline-block; min-width:18px; padding:0 6px; border-radius:10px; background:#1f2630; color:var(--text); text-align:center; font-size:12px; margin-left:4px }
 
-    /* ========== hero ========== */
     .hero{ padding:48px 0 }
     .hero-grid{ display:grid; grid-template-columns:1.2fr .8fr; gap:24px; align-items:center }
     @media (max-width:900px){ .hero-grid{ grid-template-columns:1fr } }
     h1{ font-size:clamp(28px,4.5vw,44px); line-height:1.08; margin:0 0 10px }
 
-    /* buttons */
     .btn{ border:0; border-radius:12px; padding:12px 16px; font-weight:700; cursor:pointer }
     .btn-primary{ background:var(--brand); color:#0b130e }
     .btn-ghost{ background:#1a1e24; color:var(--muted) }
+    .cta{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px }
 
-    /* ========== shop grid ========== */
     .grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px }
     @media (max-width:700px){ .grid{ grid-template-columns:1fr } }
 
-    /* product card */
     .card{ background:var(--panel); border:1px solid #23262e; border-radius:18px; overflow:hidden }
-    .card img{ aspect-ratio:4/3; object-fit:cover; background:#0c0d10 } /* shape: 4:3 rectangle */
+    .card img{ aspect-ratio:4/3; object-fit:cover; background:#0c0d10 }
     .card .info{ padding:12px 14px }
     .price{ display:flex; align-items:center; justify-content:space-between; margin-top:8px }
 
-    /* ========== cart drawer ========== */
     .drawer{ position:fixed; top:0; right:-420px; width:420px; max-width:92vw; height:100vh; background:#0f1116; border-left:1px solid #242731; transition:right .25s; display:flex; flex-direction:column; z-index:50 }
     .drawer.open{ right:0 }
     .drawer header{ display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid #1f2230 }
@@ -64,7 +51,6 @@
     .drawer footer{ padding:12px 16px; border-top:1px solid #1f2230; display:grid; gap:8px }
     .row-sum{ display:flex; justify-content:space-between; align-items:center }
 
-    /* simple toast */
     .toast{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#12151b; border:1px solid #262a34; padding:10px 14px; border-radius:12px; opacity:0; pointer-events:none; transition:opacity .25s; z-index:60 }
     .toast.show{ opacity:1 }
   </style>
@@ -116,162 +102,162 @@
     <p class="muted">Questions about an order or product? Email <a href="mailto:info@mercymienaturals.com">info@mercymienaturals.com</a>.</p>
   </section>
 
-  <!-- =========================
-       EASY DATA TO EDIT
-       ========================= -->
+  <!-- ===== EASY DATA TO EDIT ===== -->
   <script>
     const DATA = {
-      // hero banner (your repo root)
       HERO_IMAGE: "./image_hero.jpg",
-
-      // two products
       PRODUCTS: [
-        {
-          id: "toner",
-          title: "Hydrating Toner",
-          price: 24.00,
-          image: "./hydrating-toner.jpg",
-          size: "50 ml",
-          tag: "Hydration"
-        },
-        {
-          id: "serum",
-          title: "Vitamin C Serum",
-          price: 28.00,
-          image: "./serum.jpg",
-          size: "30 ml",
-          tag: "Brighten"
-        }
+        { id:"toner", title:"Hydrating Toner", price:24.00, image:"./hydrating-toner.jpg", size:"50 ml", tag:"Hydration" },
+        { id:"serum", title:"Vitamin C Serum", price:28.00, image:"./serum.jpg", size:"30 ml", tag:"Brighten" }
       ]
     };
   </script>
 
-  <!-- RENDERING + CART LOGIC -->
+  <!-- ===== RENDERING + CART LOGIC ===== -->
   <script>
-    // --- Helpers ---
-    const $ = (s)=>document.querySelector(s);
-    const fmt = (n)=>`$${n.toFixed(2)}`;
-    const CART_KEY = 'mmn_cart_v1';
+    document.addEventListener('DOMContentLoaded', () => {
+      // Helpers
+      const $ = (s)=>document.querySelector(s);
+      const fmt = (n)=>`$${n.toFixed(2)}`;
+      const CART_KEY = 'mmn_cart_v1';
 
-    // --- Hero ---
-    $('#heroImage').src = DATA.HERO_IMAGE;
+      // Hero
+      $('#heroImage').src = DATA.HERO_IMAGE;
 
-    // --- Render products ---
-    function renderProducts(){
-      const grid = $('#productGrid');
-      grid.innerHTML = DATA.PRODUCTS.map(p => `
-        <article class="card">
-          <img alt="${p.title}" src="${p.image}">
-          <div class="info">
-            <strong>${p.title}</strong>
-            <div class="muted">${p.size}${p.tag ? ` • ${p.tag}` : ''}</div>
-            <div class="price">
-              <span>${fmt(p.price)}</span>
-              <button class="btn btn-ghost" onclick="addToCart('${p.id}')">Add to cart</button>
-            </div>
-          </div>
-        </article>
-      `).join('');
-    }
-
-    // --- Cart: persistence in localStorage ---
-    function getCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY)) || {}; } catch { return {}; } }
-    function setCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); updateBadge(); }
-
-    function addToCart(id, qty=1){
-      const c = getCart(); c[id] = (c[id]||0) + qty; setCart(c);
-      showToast('Added to cart'); openDrawer(); renderCart();
-    }
-    function removeFromCart(id){
-      const c = getCart(); delete c[id]; setCart(c); renderCart();
-    }
-    function setQty(id, qty){
-      const c = getCart(); c[id] = Math.max(1, parseInt(qty)||1); setCart(c); renderCart();
-    }
-
-    function cartItems(){
-      const c = getCart();
-      return Object.entries(c).map(([id,qty])=>{
-        const p = DATA.PRODUCTS.find(x=>x.id===id);
-        return p ? {...p, qty} : null;
-      }).filter(Boolean);
-    }
-
-    function totals(){
-      const items = cartItems();
-      const subtotal = items.reduce((s,i)=> s + i.price*i.qty, 0);
-      const tax = +(subtotal*0.08).toFixed(2);                // demo: 8% tax
-      const shipping = subtotal>50 || !items.length ? 0 : 6.5; // free > $50
-      return {subtotal, tax, shipping, total: subtotal+tax+shipping};
-    }
-
-    function updateBadge(){
-      const count = Object.values(getCart()).reduce((a,b)=>a+b,0);
-      $('#cartCount').textContent = count;
-    }
-
-    // --- Drawer UI ---
-    const drawer = document.getElementById('cartDrawer');
-    function openDrawer(){ drawer.classList.add('open'); }
-    function closeDrawer(){ drawer.classList.remove('open'); }
-
-    document.getElementById('openCart').addEventListener('click', ()=>{ openDrawer(); renderCart(); });
-
-    function renderCart(){
-      const items = cartItems();
-      const wrap = document.getElementById('cartItems');
-      if(!items.length){
-        wrap.innerHTML = '<div class="muted" style="text-align:center;padding:24px">Your cart is empty.</div>';
-      } else {
-        wrap.innerHTML = items.map(i=>`
-          <div class="row">
-            <img alt="${i.title}" src="${i.image}">
-            <div>
-              <strong>${i.title}</strong>
-              <div class="muted">${fmt(i.price)}</div>
-              <div class="qty" role="group" aria-label="Quantity">
-                <button onclick="setQty('${i.id}', ${i.qty-1})">−</button>
-                <input value="${i.qty}" oninput="setQty('${i.id}', this.value)" />
-                <button onclick="setQty('${i.id}', ${i.qty+1})">+</button>
+      // Products
+      function renderProducts(){
+        const grid = $('#productGrid');
+        grid.innerHTML = DATA.PRODUCTS.map(p => `
+          <article class="card">
+            <img alt="${p.title}" src="${p.image}">
+            <div class="info">
+              <strong>${p.title}</strong>
+              <div class="muted">${p.size}${p.tag ? ` • ${p.tag}` : ''}</div>
+              <div class="price">
+                <span>${fmt(p.price)}</span>
+                <button class="btn btn-ghost" data-add="${p.id}">Add to cart</button>
               </div>
             </div>
-            <div style="text-align:right">
-              <div>${fmt(i.qty*i.price)}</div>
-              <button class="btn btn-ghost" onclick="removeFromCart('${i.id}')">Remove</button>
-            </div>
-          </div>
+          </article>
         `).join('');
+        // delegate add buttons
+        grid.addEventListener('click', (e)=>{
+          const id = e.target?.getAttribute('data-add');
+          if(id){ addToCart(id); }
+        });
       }
-      const t = totals();
-      document.getElementById('subtotal').textContent = fmt(t.subtotal);
-      document.getElementById('tax').textContent = fmt(t.tax);
-      document.getElementById('shipping').textContent = fmt(t.shipping);
-      document.getElementById('total').textContent = fmt(t.total);
-      updateBadge();
-    }
 
-    // --- Checkout (demo) ---
-    document.getElementById('checkoutBtn').addEventListener('click', ()=>{
-      const t = totals(); const items = cartItems();
-      if(!items.length){ showToast('Your cart is empty'); return; }
-      alert('Demo checkout — integrate Shopify/Stripe later.');
-      console.log({items: items.map(i=>({id:i.id, qty:i.qty})), totals: t});
+      // Cart storage
+      function getCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY)) || {}; } catch { return {}; } }
+      function setCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); updateBadge(); }
+
+      function addToCart(id, qty=1){
+        const c = getCart(); c[id] = (c[id]||0) + qty; setCart(c);
+        showToast('Added to cart'); openDrawer(); renderCart();
+      }
+      function removeFromCart(id){
+        const c = getCart(); delete c[id]; setCart(c); renderCart();
+      }
+      function setQty(id, qty){
+        const c = getCart(); c[id] = Math.max(1, parseInt(qty)||1); setCart(c); renderCart();
+      }
+
+      function cartItems(){
+        const c = getCart();
+        return Object.entries(c).map(([id,qty])=>{
+          const p = DATA.PRODUCTS.find(x=>x.id===id); return p ? {...p, qty} : null;
+        }).filter(Boolean);
+      }
+      function totals(){
+        const items = cartItems();
+        const subtotal = items.reduce((s,i)=> s + i.price*i.qty, 0);
+        const tax = +(subtotal*0.08).toFixed(2);
+        const shipping = subtotal>50 || !items.length ? 0 : 6.5;
+        return {subtotal, tax, shipping, total: subtotal+tax+shipping};
+      }
+      function updateBadge(){
+        const count = Object.values(getCart()).reduce((a,b)=>a+b,0);
+        $('#cartCount').textContent = count;
+      }
+
+      // Drawer
+      const drawer = document.getElementById('cartDrawer');
+      function openDrawer(){ drawer.classList.add('open'); }
+      function closeDrawer(){ drawer.classList.remove('open'); }
+      document.getElementById('openCart').addEventListener('click', ()=>{ openDrawer(); renderCart(); });
+
+      function renderCart(){
+        const items = cartItems();
+        const wrap = document.getElementById('cartItems');
+        if(!items.length){
+          wrap.innerHTML = '<div class="muted" style="text-align:center;padding:24px">Your cart is empty.</div>';
+        } else {
+          wrap.innerHTML = items.map(i=>`
+            <div class="row">
+              <img alt="${i.title}" src="${i.image}">
+              <div>
+                <strong>${i.title}</strong>
+                <div class="muted">${fmt(i.price)}</div>
+                <div class="qty" role="group" aria-label="Quantity">
+                  <button data-dec="${i.id}">−</button>
+                  <input value="${i.qty}" data-qty="${i.id}">
+                  <button data-inc="${i.id}">+</button>
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div>${fmt(i.qty*i.price)}</div>
+                <button class="btn btn-ghost" data-remove="${i.id}">Remove</button>
+              </div>
+            </div>
+          `).join('');
+
+          // quantity & remove events (delegate)
+          wrap.addEventListener('click', (e)=>{
+            const idInc = e.target.getAttribute('data-inc');
+            const idDec = e.target.getAttribute('data-dec');
+            const idRem = e.target.getAttribute('data-remove');
+            if(idInc){ setQty(idInc, getCart()[idInc]+1); }
+            if(idDec){ setQty(idDec, Math.max(1, getCart()[idDec]-1)); }
+            if(idRem){ removeFromCart(idRem); }
+          }, { once:true });
+
+          wrap.addEventListener('input', (e)=>{
+            const id = e.target.getAttribute('data-qty');
+            if(id){ setQty(id, e.target.value); }
+          }, { once:true });
+        }
+
+        const t = totals();
+        document.getElementById('subtotal').textContent = fmt(t.subtotal);
+        document.getElementById('tax').textContent = fmt(t.tax);
+        document.getElementById('shipping').textContent = fmt(t.shipping);
+        document.getElementById('total').textContent = fmt(t.total);
+        updateBadge();
+      }
+
+      document.getElementById('closeCartBtn').addEventListener('click', closeDrawer);
+      document.getElementById('checkoutBtn').addEventListener('click', ()=>{
+        const t = totals(); const items = cartItems();
+        if(!items.length){ showToast('Your cart is empty'); return; }
+        alert('Demo checkout — connect Stripe/Shopify later.');
+        console.log({items: items.map(i=>({id:i.id, qty:i.qty})), totals: t});
+      });
+
+      // Toast
+      const toast = document.getElementById('toast');
+      function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1200); }
+
+      // Init after DOM is ready
+      renderProducts();
+      renderCart();     // also updates cart badge
     });
-
-    // --- Toast ---
-    const toast = document.getElementById('toast');
-    function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1200); }
-
-    // --- Init ---
-    renderProducts();
-    renderCart();     // also calls updateBadge()
   </script>
 
   <!-- CART DRAWER -->
   <aside class="drawer" id="cartDrawer" aria-label="Shopping cart" aria-hidden="true">
     <header>
       <strong>Your Cart</strong>
-      <button class="btn btn-ghost" onclick="closeDrawer()">Close</button>
+      <button id="closeCartBtn" class="btn btn-ghost">Close</button>
     </header>
     <div class="items" id="cartItems"><div class="muted">Your cart is empty.</div></div>
     <footer>
@@ -283,7 +269,6 @@
     </footer>
   </aside>
 
-  <!-- tiny toast -->
   <div id="toast" class="toast">Added to cart</div>
 </body>
 </html>
