@@ -7,13 +7,13 @@
 
   <!--
     HOW TO EDIT:
-    1) Only change the DATA block (search for "EASY DATA TO EDIT").
-    2) Keep product "id" short, lowercase, no spaces.
-    3) Your image files are in the repo root: ./image_hero.jpg, ./hydrating-toner.jpg, ./serum.jpg
+    - Only change the DATA block (search for "EASY DATA TO EDIT").
+    - Keep product "id" short, lowercase, no spaces.
+    - Images live in the repo root for this version.
   -->
 
   <style>
-    /* Colors & base layout */
+    /* ========== colors & base layout ========== */
     :root{ --bg:#0f0f11; --panel:#171a20; --text:#e8eaed; --muted:#97a0aa; --brand:#9af0bf; }
     *{ box-sizing:border-box }
     html,body{ margin:0; background:var(--bg); color:var(--text); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial }
@@ -22,34 +22,51 @@
     .muted{ color:var(--muted) }
     .container{ max-width:1000px; margin:0 auto; padding:24px }
 
-    /* Top nav */
+    /* ========== top nav ========== */
     .nav{ position:sticky; top:0; background:#111319cc; border-bottom:1px solid #23262e; backdrop-filter:blur(6px) }
     .nav-inner{ display:flex; align-items:center; justify-content:space-between; padding:12px 24px }
     .brand{ display:flex; gap:10px; align-items:center; font-weight:800 }
     .dot{ width:24px; height:24px; border-radius:12px; background:linear-gradient(135deg,var(--brand),#d8ffe9) }
     .links{ display:flex; gap:16px; color:var(--muted) }
+    .cart-link{ cursor:pointer }
+    .badge{ display:inline-block; min-width:18px; padding:0 6px; border-radius:10px; background:#1f2630; color:var(--text); text-align:center; font-size:12px; margin-left:4px }
 
-    /* Hero */
+    /* ========== hero ========== */
     .hero{ padding:48px 0 }
     .hero-grid{ display:grid; grid-template-columns:1.2fr .8fr; gap:24px; align-items:center }
     @media (max-width:900px){ .hero-grid{ grid-template-columns:1fr } }
     h1{ font-size:clamp(28px,4.5vw,44px); line-height:1.08; margin:0 0 10px }
 
-    /* Buttons */
+    /* buttons */
     .btn{ border:0; border-radius:12px; padding:12px 16px; font-weight:700; cursor:pointer }
     .btn-primary{ background:var(--brand); color:#0b130e }
     .btn-ghost{ background:#1a1e24; color:var(--muted) }
-    .cta{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px }
 
-    /* Shop grid */
+    /* ========== shop grid ========== */
     .grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px }
     @media (max-width:700px){ .grid{ grid-template-columns:1fr } }
 
-    /* Product card */
+    /* product card */
     .card{ background:var(--panel); border:1px solid #23262e; border-radius:18px; overflow:hidden }
     .card img{ aspect-ratio:4/3; object-fit:cover; background:#0c0d10 } /* shape: 4:3 rectangle */
     .card .info{ padding:12px 14px }
     .price{ display:flex; align-items:center; justify-content:space-between; margin-top:8px }
+
+    /* ========== cart drawer ========== */
+    .drawer{ position:fixed; top:0; right:-420px; width:420px; max-width:92vw; height:100vh; background:#0f1116; border-left:1px solid #242731; transition:right .25s; display:flex; flex-direction:column; z-index:50 }
+    .drawer.open{ right:0 }
+    .drawer header{ display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid #1f2230 }
+    .drawer .items{ flex:1; overflow:auto; padding:12px; display:grid; gap:12px }
+    .drawer .row{ display:grid; grid-template-columns:64px 1fr auto; gap:10px; align-items:center; background:#151821; border:1px solid #232732; border-radius:12px; padding:8px }
+    .qty{ display:inline-flex; border:1px solid #2a2e37; border-radius:10px; overflow:hidden }
+    .qty button{ background:#1a1e26; border:0; padding:6px 10px; color:var(--text); cursor:pointer }
+    .qty input{ width:38px; background:#12151b; color:var(--text); border:0; text-align:center }
+    .drawer footer{ padding:12px 16px; border-top:1px solid #1f2230; display:grid; gap:8px }
+    .row-sum{ display:flex; justify-content:space-between; align-items:center }
+
+    /* simple toast */
+    .toast{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#12151b; border:1px solid #262a34; padding:10px 14px; border-radius:12px; opacity:0; pointer-events:none; transition:opacity .25s; z-index:60 }
+    .toast.show{ opacity:1 }
   </style>
 </head>
 <body>
@@ -61,7 +78,7 @@
         <a href="#shop">Shop</a>
         <a href="#about">About</a>
         <a href="#contact">Contact</a>
-        <span>Cart (0)</span><!-- demo only -->
+        <span id="openCart" class="cart-link">Cart <span id="cartCount" class="badge">0</span></span>
       </div>
     </div>
   </nav>
@@ -74,7 +91,7 @@
         <p class="muted">Click → add to cart → checkout. Transparent pricing: product + tax + shipping.</p>
         <div class="cta">
           <a class="btn btn-primary" href="#shop">Shop now</a>
-          <button class="btn btn-ghost" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})">Contact</button>
+          <a class="btn btn-ghost" href="#contact">Contact</a>
         </div>
       </div>
       <div>
@@ -104,18 +121,18 @@
        ========================= -->
   <script>
     const DATA = {
-      // Hero banner (file lives in repo root)
+      // hero banner (your repo root)
       HERO_IMAGE: "./image_hero.jpg",
 
-      // Exactly two products for now
+      // two products
       PRODUCTS: [
         {
-          id: "toner",                    // short key (internal)
-          title: "Hydrating Toner",       // shown on the card
-          price: 24.00,                   // number only
-          image: "./hydrating-toner.jpg", // file in repo root
-          size: "50 ml",                  // optional subtitle
-          tag: "Hydration"                // optional short label
+          id: "toner",
+          title: "Hydrating Toner",
+          price: 24.00,
+          image: "./hydrating-toner.jpg",
+          size: "50 ml",
+          tag: "Hydration"
         },
         {
           id: "serum",
@@ -129,17 +146,19 @@
     };
   </script>
 
-  <!-- RENDERING LOGIC (no need to edit) -->
+  <!-- RENDERING + CART LOGIC -->
   <script>
-    // Helper to format dollars
-    const fmt = (n) => `$${n.toFixed(2)}`;
+    // --- Helpers ---
+    const $ = (s)=>document.querySelector(s);
+    const fmt = (n)=>`$${n.toFixed(2)}`;
+    const CART_KEY = 'mmn_cart_v1';
 
-    // Show hero image
-    document.getElementById('heroImage').src = DATA.HERO_IMAGE;
+    // --- Hero ---
+    $('#heroImage').src = DATA.HERO_IMAGE;
 
-    // Render product cards into the grid
-    function renderProducts() {
-      const grid = document.getElementById('productGrid');
+    // --- Render products ---
+    function renderProducts(){
+      const grid = $('#productGrid');
       grid.innerHTML = DATA.PRODUCTS.map(p => `
         <article class="card">
           <img alt="${p.title}" src="${p.image}">
@@ -148,15 +167,123 @@
             <div class="muted">${p.size}${p.tag ? ` • ${p.tag}` : ''}</div>
             <div class="price">
               <span>${fmt(p.price)}</span>
-              <button class="btn btn-ghost" onclick="alert('Demo: ${p.title} added to cart')">Add to cart</button>
+              <button class="btn btn-ghost" onclick="addToCart('${p.id}')">Add to cart</button>
             </div>
           </div>
         </article>
       `).join('');
     }
 
-    // Initialize
+    // --- Cart: persistence in localStorage ---
+    function getCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY)) || {}; } catch { return {}; } }
+    function setCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); updateBadge(); }
+
+    function addToCart(id, qty=1){
+      const c = getCart(); c[id] = (c[id]||0) + qty; setCart(c);
+      showToast('Added to cart'); openDrawer(); renderCart();
+    }
+    function removeFromCart(id){
+      const c = getCart(); delete c[id]; setCart(c); renderCart();
+    }
+    function setQty(id, qty){
+      const c = getCart(); c[id] = Math.max(1, parseInt(qty)||1); setCart(c); renderCart();
+    }
+
+    function cartItems(){
+      const c = getCart();
+      return Object.entries(c).map(([id,qty])=>{
+        const p = DATA.PRODUCTS.find(x=>x.id===id);
+        return p ? {...p, qty} : null;
+      }).filter(Boolean);
+    }
+
+    function totals(){
+      const items = cartItems();
+      const subtotal = items.reduce((s,i)=> s + i.price*i.qty, 0);
+      const tax = +(subtotal*0.08).toFixed(2);                // demo: 8% tax
+      const shipping = subtotal>50 || !items.length ? 0 : 6.5; // free > $50
+      return {subtotal, tax, shipping, total: subtotal+tax+shipping};
+    }
+
+    function updateBadge(){
+      const count = Object.values(getCart()).reduce((a,b)=>a+b,0);
+      $('#cartCount').textContent = count;
+    }
+
+    // --- Drawer UI ---
+    const drawer = document.getElementById('cartDrawer');
+    function openDrawer(){ drawer.classList.add('open'); }
+    function closeDrawer(){ drawer.classList.remove('open'); }
+
+    document.getElementById('openCart').addEventListener('click', ()=>{ openDrawer(); renderCart(); });
+
+    function renderCart(){
+      const items = cartItems();
+      const wrap = document.getElementById('cartItems');
+      if(!items.length){
+        wrap.innerHTML = '<div class="muted" style="text-align:center;padding:24px">Your cart is empty.</div>';
+      } else {
+        wrap.innerHTML = items.map(i=>`
+          <div class="row">
+            <img alt="${i.title}" src="${i.image}">
+            <div>
+              <strong>${i.title}</strong>
+              <div class="muted">${fmt(i.price)}</div>
+              <div class="qty" role="group" aria-label="Quantity">
+                <button onclick="setQty('${i.id}', ${i.qty-1})">−</button>
+                <input value="${i.qty}" oninput="setQty('${i.id}', this.value)" />
+                <button onclick="setQty('${i.id}', ${i.qty+1})">+</button>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div>${fmt(i.qty*i.price)}</div>
+              <button class="btn btn-ghost" onclick="removeFromCart('${i.id}')">Remove</button>
+            </div>
+          </div>
+        `).join('');
+      }
+      const t = totals();
+      document.getElementById('subtotal').textContent = fmt(t.subtotal);
+      document.getElementById('tax').textContent = fmt(t.tax);
+      document.getElementById('shipping').textContent = fmt(t.shipping);
+      document.getElementById('total').textContent = fmt(t.total);
+      updateBadge();
+    }
+
+    // --- Checkout (demo) ---
+    document.getElementById('checkoutBtn').addEventListener('click', ()=>{
+      const t = totals(); const items = cartItems();
+      if(!items.length){ showToast('Your cart is empty'); return; }
+      alert('Demo checkout — integrate Shopify/Stripe later.');
+      console.log({items: items.map(i=>({id:i.id, qty:i.qty})), totals: t});
+    });
+
+    // --- Toast ---
+    const toast = document.getElementById('toast');
+    function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1200); }
+
+    // --- Init ---
     renderProducts();
+    renderCart();     // also calls updateBadge()
   </script>
+
+  <!-- CART DRAWER -->
+  <aside class="drawer" id="cartDrawer" aria-label="Shopping cart" aria-hidden="true">
+    <header>
+      <strong>Your Cart</strong>
+      <button class="btn btn-ghost" onclick="closeDrawer()">Close</button>
+    </header>
+    <div class="items" id="cartItems"><div class="muted">Your cart is empty.</div></div>
+    <footer>
+      <div class="row-sum"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+      <div class="row-sum"><span>Estimated Tax</span><span id="tax">$0.00</span></div>
+      <div class="row-sum"><span>Estimated Shipping</span><span id="shipping">$0.00</span></div>
+      <div class="row-sum"><strong>Total</strong><strong id="total">$0.00</strong></div>
+      <button id="checkoutBtn" class="btn btn-primary" style="margin-top:8px">Checkout</button>
+    </footer>
+  </aside>
+
+  <!-- tiny toast -->
+  <div id="toast" class="toast">Added to cart</div>
 </body>
 </html>
